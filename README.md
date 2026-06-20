@@ -6,6 +6,7 @@
   <img src="https://img.shields.io/badge/MikroTik-RouterOS-blue?style=for-the-badge">
   <img src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4?style=for-the-badge&logo=telegram">
   <img src="https://img.shields.io/badge/Wake_on_LAN-Supported-success?style=for-the-badge">
+  <img src="https://img.shields.io/badge/RouterOS-v6.x-orange?style=for-the-badge">
   <img src="https://img.shields.io/badge/Status-Production-green?style=for-the-badge">
 </p>
 
@@ -30,11 +31,21 @@ Everything runs directly on a MikroTik router that is already online 24/7.
 
 I wanted a simple way to turn on my home computer remotely.
 
-Most solutions require buying extra hardware or leaving another device powered on all the time.
+Most solutions require additional hardware, cloud services, or another device permanently powered on.
 
 Since I already had a MikroTik router running continuously, I decided to use the existing infrastructure to create a lightweight and cost-free solution.
 
 The result is WakeOnEarth.
+
+---
+
+## 🌎 Real-World Use Case
+
+This project is actively used in my personal environment.
+
+When I am away from home, I can send a command through Telegram and remotely power on my desktop computer using Wake-on-LAN.
+
+The solution was designed to be simple, reliable, and completely independent of additional hardware.
 
 ---
 
@@ -46,6 +57,7 @@ The result is WakeOnEarth.
 * Internet connectivity diagnostics
 * Lightweight RouterOS implementation
 * No external servers required
+* Uses existing network infrastructure
 
 ---
 
@@ -82,33 +94,33 @@ The result is WakeOnEarth.
 
 ## 📱 Available Commands
 
-### Start Computer
+### turnon
+
+Starts the configured computer by sending a Wake-on-LAN packet.
 
 ```text
 turnon
 ```
 
-Sends a Wake-on-LAN packet to the configured device.
-
 ---
 
-### Check Computer Status
+### status
+
+Checks whether the target computer is online and responding.
 
 ```text
 status
 ```
 
-Verifies whether the target machine is online and responding.
-
 ---
 
-### Check Internet Quality
+### internet
+
+Performs a connectivity test and reports network quality based on latency and packet loss.
 
 ```text
 internet
 ```
-
-Performs a connectivity test and reports network quality based on packet loss and latency.
 
 ---
 
@@ -123,17 +135,25 @@ Performs a connectivity test and reports network quality based on packet loss an
 
 ---
 
+## 📦 Installation
+
+Detailed installation instructions are available here:
+
+👉 **INSTALL.md**
+
+---
+
 ## 📂 Repository Structure
 
 ```text
 WakeOnEarth/
 │
 ├── README.md
-├── mikrotik/
-│   └── wakeonearth.rsc
+├── INSTALL.md
+├── LICENSE
 │
-└── docs/
-    └── architecture.png
+└── mikrotik/
+    └── wakeonearth.rsc
 ```
 
 ---
@@ -142,12 +162,14 @@ WakeOnEarth/
 
 Before using this project:
 
-* Create your own Telegram Bot.
-* Generate your own Bot Token.
-* Configure your Chat ID.
-* Replace MAC addresses.
-* Replace internal IP addresses.
-* Never publish real credentials.
+* Create your own Telegram Bot
+* Generate your own Bot Token
+* Configure your Chat ID
+* Replace MAC addresses
+* Replace internal IP addresses
+* Never publish real credentials
+
+The repository intentionally contains placeholders instead of real infrastructure information.
 
 ---
 
@@ -192,4 +214,4 @@ https://www.linkedin.com/in/rafael-caires-pires-58225b238
 
 ---
 
-⭐ If you found this project useful, consider giving it a star.
+⭐ If you found this project interesting, consider giving it a star.
