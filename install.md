@@ -1,18 +1,35 @@
 # ⚙ Installation Guide
 
-This guide explains how to deploy WakeOnEarth on a MikroTik RouterOS device.
+This guide explains how to deploy WakeOnEarth and configure the complete remote access workflow.
 
-## Requirements
+The final setup allows you to:
 
-* MikroTik RouterOS v6+
-* Telegram account
-* Telegram Bot Token
-* Target computer with Wake-on-LAN enabled
-* Local network access to the target device
+* Power on a computer remotely using Telegram
+* Verify connectivity through MikroTik
+* Access the computer securely using Tailscale
+* Control the computer remotely using Sunshine and Moonlight
 
 ---
 
-## 1. Create a Telegram Bot
+# Requirements
+
+## Hardware
+
+* MikroTik RouterOS v6+
+* Computer with Wake-on-LAN support
+* Internet connection
+
+## Software
+
+* Telegram Account
+* Telegram Bot
+* Tailscale
+* Sunshine
+* Moonlight
+
+---
+
+# 1. Create a Telegram Bot
 
 Open Telegram and start a conversation with:
 
@@ -23,10 +40,10 @@ Open Telegram and start a conversation with:
 Create a new bot:
 
 ```text
-/ newbot
+/newbot
 ```
 
-Save the generated Bot Token.
+Follow the instructions and save the generated Bot Token.
 
 Example:
 
@@ -34,11 +51,13 @@ Example:
 123456789:ABCDEFxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
+Keep this token private.
+
 ---
 
-## 2. Obtain Your Chat ID
+# 2. Obtain Your Chat ID
 
-Send a message to your bot.
+Send a message to your newly created bot.
 
 Open:
 
@@ -48,105 +67,354 @@ https://api.telegram.org/botYOUR_BOT_TOKEN/getUpdates
 
 Locate your Chat ID in the JSON response.
 
+Example:
+
+```json
+{
+  "chat": {
+    "id": 123456789
+  }
+}
+```
+
+Save the Chat ID.
+
 ---
 
-## 3. Enable Wake-on-LAN
+# 3. Enable Wake-on-LAN
 
-On the target computer:
+Wake-on-LAN must be enabled on the target computer.
 
-* Enable Wake-on-LAN in BIOS/UEFI
-* Enable Wake-on-LAN in the operating system
-* Confirm the network adapter supports WOL
+## BIOS / UEFI
+
+Enable:
+
+```text
+Wake-on-LAN
+Power On By PCI-E
+Resume By LAN
+```
+
+The option name varies by motherboard manufacturer.
 
 ---
 
-## 4. Configure the Script
+## Windows
 
-Edit the following values inside:
+Open:
+
+```text
+Device Manager
+→ Network Adapter
+→ Properties
+→ Power Management
+```
+
+Enable:
+
+```text
+Allow this device to wake the computer
+Only allow a magic packet to wake the computer
+```
+
+---
+
+# 4. Obtain the MAC Address
+
+The script requires the MAC address of the target device.
+
+Windows:
+
+```powershell
+ipconfig /all
+```
+
+Example:
+
+```text
+30:C5:99:33:7A:88
+```
+
+Save the MAC address.
+
+---
+
+# 5. Configure the RouterOS Script
+
+Open:
 
 ```text
 mikrotik/wakeonearth.rsc
 ```
 
-Replace:
+Replace the placeholders with your own values.
 
-```text
-YOUR_BOT_TOKEN
-YOUR_CHAT_ID
-XX:XX:XX:XX:XX:XX
-192.168.X.X
+Example:
+
+```routeros
+:local token "YOUR_BOT_TOKEN"
+
+:local chatid "YOUR_CHAT_ID"
+
+/tool wol mac=XX:XX:XX:XX:XX:XX
 ```
 
-With your own environment information.
+Also update:
+
+```text
+MAC Address
+Target IP Address
+Bridge Interface
+```
+
+according to your environment.
 
 ---
 
-## 5. Import the Script
+# 6. Import the Script
 
-Upload the file to your MikroTik router.
+Upload the file to the MikroTik router.
 
-Import it using:
+Import using:
 
 ```routeros
 /import wakeonearth.rsc
 ```
 
+Verify that no errors are reported.
+
 ---
 
-## 6. Create a Scheduler
+# 7. Create a Scheduler
 
-Create a scheduler entry that runs every minute.
+The script must run periodically to check for Telegram commands.
 
-Suggested configuration:
+Navigate to:
+
+```text
+System → Scheduler
+```
+
+Create:
 
 ```text
 Name: WakeOnEarth
+
 Interval: 1m
+
+On Event:
+WakeOnEarth
 ```
+
+Adjust the script name if necessary.
 
 ---
 
-## 7. Test Commands
+# 8. Test Telegram Commands
 
-Send the following commands to your Telegram bot:
+Send the following commands to your bot.
+
+Power on the computer:
 
 ```text
 turnon
+```
+
+Check computer status:
+
+```text
 status
+```
+
+Check internet quality:
+
+```text
 internet
+```
+
+Expected result:
+
+```text
+PC online and responding
+```
+
+or
+
+```text
+PC offline
 ```
 
 ---
 
-## Troubleshooting
+# 9. Install Tailscale
 
-### Computer does not turn on
+Tailscale provides secure remote connectivity without opening ports on the router.
+
+Official Website:
+
+https://tailscale.com
+
+Install Tailscale on:
+
+* Desktop Computer
+* Laptop
+* Phone
+* Tablet
+
+Login with the same account on all devices.
+
+After installation, the computer will receive a private Tailscale IP.
+
+Example:
+
+```text
+100.x.x.x
+```
+
+You should now be able to reach the computer from anywhere.
+
+---
+
+# 10. Install Sunshine
+
+Sunshine is the streaming host that runs on the target computer.
+
+Official Repository:
+
+https://github.com/LizardByte/Sunshine
+
+Install Sunshine and complete the initial setup.
+
+Confirm that:
+
+```text
+Sunshine Service Running
+```
+
+appears correctly.
+
+---
+
+# 11. Install Moonlight
+
+Moonlight is the client used to connect to Sunshine.
+
+Official Website:
+
+https://moonlight-stream.org
+
+Install Moonlight on the device you will use remotely.
+
+Examples:
+
+* Phone
+* Tablet
+* Laptop
+* Another Desktop
+
+---
+
+# 12. Pair Moonlight with Sunshine
+
+Using the Tailscale IP of the target computer:
+
+```text
+100.x.x.x
+```
+
+Add the host inside Moonlight.
+
+Complete the pairing process.
+
+Once paired, you will be able to:
+
+* Access the desktop
+* Control applications
+* Transfer files
+* Stream games
+* Manage the computer remotely
+
+---
+
+# Complete Workflow
+
+```text
+Phone / Laptop
+       │
+       ▼
+Telegram Command
+       │
+       ▼
+Telegram Bot API
+       │
+       ▼
+MikroTik Router
+       │
+       ▼
+Wake-on-LAN Packet
+       │
+       ▼
+Desktop Computer
+       │
+       ▼
+Tailscale VPN
+       │
+       ▼
+Sunshine Host
+       │
+       ▼
+Moonlight Client
+       │
+       ▼
+Remote Desktop / Game Streaming
+```
+
+---
+
+# Troubleshooting
+
+## Computer Does Not Turn On
 
 Verify:
 
-* Wake-on-LAN is enabled
-* Correct MAC address is configured
-* Correct interface is configured
-* Computer is connected to the network
+* Wake-on-LAN enabled in BIOS
+* Correct MAC address
+* Correct MikroTik interface
+* Computer connected to the network
 
-### Bot does not respond
+---
+
+## Telegram Bot Does Not Respond
 
 Verify:
 
-* Telegram Bot Token
+* Bot Token
 * Chat ID
-* Internet access on MikroTik
+* Internet connectivity on MikroTik
 * Scheduler execution
 
 ---
 
-## Security Recommendations
+## Moonlight Cannot Connect
 
-* Never publish your Bot Token
-* Never publish internal IP addresses
-* Never publish production infrastructure information
-* Restrict bot access whenever possible
+Verify:
+
+* Tailscale running on both devices
+* Sunshine service running
+* Devices visible in Tailscale
+* Firewall rules
 
 ---
 
-WakeOnEarth was designed as a lightweight and practical remote power management solution using only existing network infrastructure.
+# Security Recommendations
+
+* Never publish your Telegram Bot Token
+* Never publish your Chat ID
+* Never publish internal IP addresses
+* Never expose Sunshine directly to the internet
+* Prefer Tailscale over port forwarding
+* Rotate credentials periodically
+
+---
+
+WakeOnEarth was designed as a lightweight and practical remote power management solution using only existing infrastructure and open-source tools.
