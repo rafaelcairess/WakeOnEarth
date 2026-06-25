@@ -67,7 +67,7 @@ All without exposing services directly to the internet or requiring additional a
 
 ---
 
-## 🔄 Complete Workflow
+## Complete Workflow
 
 ```text
 Phone / Laptop
@@ -102,7 +102,7 @@ Remote Desktop / Game Streaming
 
 ---
 
-## 🎮 Remote Access Stack
+## Remote Access Stack
 
 WakeOnEarth handles only the power-on process.
 
@@ -150,7 +150,7 @@ Instead of keeping the machine running 24/7, WakeOnEarth powers it on remotely a
 
 ---
 
-## 🚀 Features
+## Features
 
 - Remote PC startup using Telegram
 - Wake-on-LAN integration
@@ -211,7 +211,7 @@ Instead of keeping the machine running 24/7, WakeOnEarth powers it on remotely a
 
 ---
 
-## 📱 Available Commands
+##  Available Commands
 
 ### turnon
 
