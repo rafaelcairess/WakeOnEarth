@@ -45,10 +45,6 @@
         url=("https://api.telegram.org/bot" . $token . "/getUpdates?offset=" . $wolLastOffset . "&limit=1") \
         keep-result=no;
 
-    # ======================================
-    # TURN ON PC
-    # ======================================
-
     :if ([:find $body "\"text\":\"turnon\"" -1] > 0) do={
 
         /tool wol \
@@ -59,10 +55,6 @@
             url=("https://api.telegram.org/bot" . $token . "/sendMessage?chat_id=" . $chatid . "&text=Wake-on-LAN packet sent successfully.") \
             keep-result=no;
     };
-
-    # ======================================
-    # PC STATUS
-    # ======================================
 
     :if ([:find $body "\"text\":\"status\"" -1] > 0) do={
 
@@ -82,11 +74,6 @@
                 keep-result=no;
         };
     };
-
-    # ======================================
-    # INTERNET TEST
-    # ======================================
-
     :if ([:find $body "\"text\":\"internet\"" -1] > 0) do={
 
         :local ping [/ping 8.8.8.8 count=5 as-value];
@@ -98,7 +85,6 @@
             /tool fetch \
                 url=("https://api.telegram.org/bot" . $token . "/sendMessage?chat_id=" . $chatid . "&text=Internet connection unavailable.") \
                 keep-result=no;
-
         } else={
 
             :if ($rtt < 50) do={
