@@ -1,70 +1,133 @@
-# 🌍 WakeOnEarth
+<div align="center">
 
-**Turn on and access a computer from anywhere using Telegram and a MikroTik router.**
+# WakeOnEarth
 
-<p align="left">
-  <img alt="MikroTik RouterOS" src="https://img.shields.io/badge/MikroTik-RouterOS-293239?style=flat-square&logo=mikrotik">
-  <img alt="Telegram Bot API" src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4?style=flat-square&logo=telegram&logoColor=white">
-  <img alt="Wake-on-LAN" src="https://img.shields.io/badge/Wake--on--LAN-2ea44f?style=flat-square">
+### Power on and access your computer from anywhere with Telegram and MikroTik.
+
+A lightweight Wake-on-LAN workflow built with infrastructure that is already online —
+no Raspberry Pi, smart plug, dedicated server, or exposed inbound port required.
+
+<p>
+  <img alt="MikroTik RouterOS" src="https://img.shields.io/badge/MikroTik-RouterOS-293239?style=for-the-badge&logo=mikrotik&logoColor=white">
+  <img alt="Telegram Bot API" src="https://img.shields.io/badge/Telegram-Bot_API-26A5E4?style=for-the-badge&logo=telegram&logoColor=white">
+  <a href="./LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge"></a>
 </p>
 
-## Why I built it
+[**Setup guide**](./install.md) ·
+[View the RouterOS script](./mikrotik/mikrotik.rsc) ·
+[Understand the architecture](#architecture)
 
-I wanted to access my home computer while away without leaving it powered on 24/7 or buying extra hardware.
+</div>
 
-Since my MikroTik router was already always online, I turned it into a lightweight remote power controller. A Telegram message makes the router send a Wake-on-LAN packet to the computer. Once it starts, I can connect securely with Tailscale and use Sunshine + Moonlight for remote access.
+## The problem
 
-This is a small project, but it solves a real problem in my daily life.
+Remote access normally requires leaving a computer powered on all day or adding another always-on device. WakeOnEarth uses the MikroTik router that is already running at home as a small automation controller.
 
-## How it works
+A Telegram command reaches the router, which sends the Wake-on-LAN packet and reports whether the computer or internet connection is available. After startup, Tailscale provides private connectivity while Sunshine and Moonlight handle remote desktop and game streaming.
 
-```text
-Telegram command
-       ↓
-MikroTik RouterOS
-       ↓ Wake-on-LAN
-Home computer
-       ↓
-Tailscale + Sunshine + Moonlight
+## What it does
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <strong>Remote power-on</strong><br>
+      Sends a Wake-on-LAN magic packet from RouterOS after receiving a Telegram command.
+    </td>
+    <td width="33%" valign="top">
+      <strong>Computer status</strong><br>
+      Pings the target computer and reports whether it is online or offline.
+    </td>
+    <td width="33%" valign="top">
+      <strong>Connection check</strong><br>
+      Measures internet availability and classifies the observed latency.
+    </td>
+  </tr>
+</table>
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A[Telegram command] --> B[Telegram Bot API]
+    B --> C[MikroTik RouterOS]
+    C -->|Wake-on-LAN| D[Home computer]
+    D --> E[Tailscale]
+    E --> F[Sunshine]
+    F --> G[Moonlight client]
 ```
 
-No Raspberry Pi, smart plug, dedicated server, or open inbound ports are required.
-
-## What it demonstrates
-
-- Network automation with RouterOS scripting
-- Integration with the Telegram Bot API
-- Wake-on-LAN and ICMP network diagnostics
-- Scheduled task execution and update tracking
-- A practical remote-access workflow focused on simplicity and security
+The router polls the Telegram Bot API on a schedule. Commands are processed locally by the RouterOS script; remote access itself travels through Tailscale instead of a public port-forwarding rule.
 
 ## Commands
 
 | Command | Result |
 | --- | --- |
-| `turnon` | Sends the Wake-on-LAN packet |
-| `status` | Checks whether the computer is online |
-| `internet` | Reports internet availability and latency |
+| `turnon` | Sends the Wake-on-LAN packet to the configured MAC address |
+| `status` | Checks whether the target computer responds on the local network |
+| `internet` | Reports internet availability and average latency |
 
-## Technologies
+## Quick start
 
-`MikroTik RouterOS` · `Telegram Bot API` · `Wake-on-LAN` · `Tailscale` · `Sunshine` · `Moonlight`
+1. Create a private Telegram bot with BotFather.
+2. Copy [`mikrotik/mikrotik.rsc`](./mikrotik/mikrotik.rsc) and replace the token, chat ID, MAC address, target IP and LAN interface placeholders.
+3. Import the script into RouterOS and schedule it to run periodically.
+4. Enable Wake-on-LAN in the target computer's BIOS/UEFI and network adapter.
+5. Follow the [complete installation guide](./install.md) to configure Tailscale, Sunshine and Moonlight.
 
-## Try it
+```routeros
+/import mikrotik.rsc
+```
 
-The RouterOS script is available at [`mikrotik/mikrotik.rsc`](mikrotik/mikrotik.rsc). Replace the bot token, chat ID, MAC address, target IP, and network interface with your own values.
+> [!CAUTION]
+> The current proof-of-concept script does not validate the sender ID independently from the configured chat destination. Keep the bot private, never commit its token, and add explicit sender validation before using it in a shared bot or group.
 
-See the [installation guide](install.md) for the complete setup.
+## Engineering highlights
 
-> [!IMPORTANT]
-> Keep your bot token private. The current script does not validate the sender of an incoming command, so use a private bot and add sender validation before sharing it with other users or groups.
+| Area | Implementation |
+| --- | --- |
+| Network automation | RouterOS scripting, scheduled polling and Wake-on-LAN |
+| External integration | Telegram Bot API through RouterOS `/tool fetch` |
+| Diagnostics | ICMP checks for host availability, packet loss and average RTT |
+| Remote access | Private Tailscale network with Sunshine and Moonlight |
+| Deployment | Single configurable `.rsc` script with no additional hardware |
+
+## Configuration placeholders
+
+The distributed script contains placeholders only:
+
+```routeros
+:local token "YOUR_BOT_TOKEN";
+:local chatid "YOUR_CHAT_ID";
+
+/tool wol \
+    mac=XX:XX:XX:XX:XX:XX \
+    interface=Bridge-LAN;
+```
+
+Do not publish a configured copy. Bot tokens, chat IDs, internal addresses and MAC addresses should remain outside version control.
+
+## Project structure
+
+```text
+WakeOnEarth/
+├── mikrotik/
+│   └── mikrotik.rsc   # RouterOS automation
+├── install.md         # End-to-end setup and troubleshooting
+├── LICENSE
+└── README.md
+```
 
 ## Author
 
-Created by **Rafael Caires Pires**, NOC Analyst focused on networking, Linux, Python, and automation.
+Created by **[Rafael Caires Pires](https://github.com/rafaelcairess)**, NOC Analyst focused on networking, Linux, Python and automation.
 
-[GitHub](https://github.com/rafaelcairess) · [LinkedIn](https://www.linkedin.com/in/rafael-caires-pires-58225b238)
+[LinkedIn](https://www.linkedin.com/in/rafael-caires-pires-58225b238) ·
+[Open an issue](https://github.com/rafaelcairess/WakeOnEarth/issues)
 
----
+Distributed under the [MIT License](./LICENSE).
 
-If this project was useful or gave you an idea, consider leaving a star. ⭐
+<div align="center">
+
+If WakeOnEarth is useful or inspires another automation project, consider leaving a ⭐.
+
+</div>
